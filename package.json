@@ -1,0 +1,19 @@
+{
+  "name": "jarvix",
+  "version": "1.0.0",
+  "description": "",
+  "main": "jarvix.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node jarvix-server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^4.15.0",
+    "readline-sync": "^1.4.4",
+    "shelljs": "^0.7.3",
+    "tmp": "0.0.28",
+    "ws": "^1.1.1"
+  }
+}
