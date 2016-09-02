@@ -1,6 +1,7 @@
 const shell = require('shelljs')
 const path = require('path')
 const tmp = require('tmp')
+const os = require('os')
 
 runCmd = (cmd) => {
   result = shell.exec(cmd, {silent:true})
@@ -20,7 +21,14 @@ const getServerIps = (env) => {
 }
 
 const open_pic = (picPath) => {
-  result = shell.exec(`open ${picPath}`)
+  switch (os.platform()) {
+    case "darwin":
+      result = shell.exec(`open ${picPath}`)
+      break;
+    case "linux":
+      result = shell.exec(`xdg-open ${picPath}`)
+      break;
+  }
 }
 
 const picFetch = (cmd) => {

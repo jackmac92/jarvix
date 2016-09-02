@@ -1,8 +1,8 @@
 const shell = require('shelljs')
-const os = require('os')
 const path = require('path')
 const tmp = require('tmp')
 const fs = require('fs')
+const os = require('os')
 
 const terminalHelper = (cmd, args) => {
     const tmpDir = tmp.dirSync({ mode: 0750, prefix: `${cmd}_` });
@@ -11,7 +11,6 @@ const terminalHelper = (cmd, args) => {
 
     fs.writeFile(argsFilePath, JSON.stringify(args, null, 4))
 
-
     args = args || ""
     if (typeof(cmd) === "object") {
         throw new Error("Command sent to openTermWithScript must be the name of js file")
@@ -19,15 +18,14 @@ const terminalHelper = (cmd, args) => {
     const scriptPath = path.join(__dirname,"..", `${cmd}.js`)
     switch (os.platform()) {
         case "darwin":
-            openTerm = `osascript -e 'tell application "Terminal"' -e 'do script "${scriptPath} '${argsFilePath}' "' -e  'end tell'`
+            openTerm = `osascript -e 'tell application "Terminal"' -e 'do script "${scriptPath} '${argsFilePath}' "' -e 'activate' -e  'end tell'`
             break;
         case "linux":
             openTerm = `gnome-terminal -e "${scriptPath} ${argsFilePath}"`
             break;
         case "win32":
-            break;
         default:
-            throw new Error("Couldn't detect os")
+            throw new Error("Couldn't detect os or it's not supported")
             break;
     }
     result = shell.exec(openTerm, {silent: true})

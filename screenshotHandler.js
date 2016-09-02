@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 const readline = require('readline-sync');
-const shell = require('shelljs')
-const screenshotGrabber = require('./utils/downloadScreenShot.js')
-const winSetup = require('./utils/newTermWindowSetup.js')
+const shell = require('shelljs');
+const screenshotGrabber = require('./utils/downloadScreenShot.js');
+const winSetup = require('./utils/newTermWindowSetup.js');
 
 
-setupInfo = winSetup(process.argv[2])
+setupInfo = winSetup(process.argv[2]);
 
-const pic = setupInfo[0]
-const tmpDir = setupInfo[1]
+const pic = setupInfo[0];
+const tmpDir = setupInfo[1];
 
 const branchConvert = {
     "develop": "dev",
@@ -16,17 +16,17 @@ const branchConvert = {
     "master": "prod"
 }
 
-const branch = branchConvert[pic.branch]
-const picPath = pic.screenshot
+const branch = branchConvert[pic.branch];
+const picPath = pic.screenshot;
 
-readline.question("Enter to Start")
+readline.question("Enter to Start");
 
-s = screenshotGrabber(branch, picPath, tmpDir)
+s = screenshotGrabber(branch, picPath, tmpDir);
 
 s.then((res) => {
-    readline.question("Enter to close")
-    shell.exec(`rm -rf ${tmpDir}`)
+    readline.question("Enter to close");
+    shell.exec(`rm -rf ${tmpDir}`);
 }).catch( (reason) => {
-    console.log("Couldn't do it")
-    console.log(reason)
+    console.log("Couldn't do it");
+    console.log(reason);
 })
