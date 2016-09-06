@@ -33,17 +33,6 @@ const checkRepoReady = () => {
 
 }
 
-const postSetup = (repo) => {
-    switch (repo) {
-        case "cbi-site":
-            runCmd("npm run dev")
-            break;
-        case "cbi-api":
-            runCmd("vagrant reload")
-            break;
-    }
-}
-
 const repoSetup = (repo, branch) => {
     const wd = getWorkingDir(repo)
     checkRepoReady()
