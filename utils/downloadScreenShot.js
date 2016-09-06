@@ -1,3 +1,4 @@
+const boto = require('aws-sdk')
 const shell = require('shelljs')
 const path = require('path')
 const tmp = require('tmp')
@@ -15,9 +16,35 @@ runCmd = (cmd) => {
 }
 
 const getServerIps = (env) => {
-  const cmd = `aws-show-ips ${env} test-runner --ssh | awk '{print $4}' | awk '{print $1}'`
-  result = runCmd(cmd).split(/\s+/).filter(el => el.length > 0)
-  return result
+  ec2EnvMap = {
+    dev:"dev",
+    staging:"stg",
+    prod:"prd"
+  }
+
+  ec2Env = ec2EnvMap[env]
+
+  const ec2Params = {
+    Filters: [
+      {
+        Name: 'tag:Name',
+        Values: [`ec2.cbi_${ec2Env}.tst.integration-tests`]
+      }
+    ],
+  };
+  return new Promise((resolve, reject) => {
+    const ec2 = new boto.EC2({region:"us-east-1"})
+    ec2.describeInstances(ec2Params, (err, data) => {
+      if (err) {
+        reject(err)
+      }
+      var ips = []
+      data["Reservations"].forEach(server => {
+        server.Instances.forEach(instance => ips.push(instance["PrivateIpAddress"]))
+      })
+      resolve(ips)
+    });
+  })
 }
 
 const open_pic = (picPath) => {
@@ -42,8 +69,8 @@ const picFetch = (cmd) => {
   })
 }
 
-const get_picture = (ips, picPath, tmpDir) => {
-  errCount = 0
+const getPicture = (ips, picPath, tmpDir) => {
+  var errCount = 0
   ips.forEach( (ip) => {
     cmd = `scp ${ip}:${picPath} ${tmpDir}`
     pf = picFetch(cmd)
@@ -64,13 +91,15 @@ const get_picture = (ips, picPath, tmpDir) => {
 const main = (branch, picPath, tmpDir) => {
   tmpDir = tmpDir || path.dirname(tmp.dirSync({ mode: 0750, prefix: "cbiHelper_" }).name);
   return new Promise( (resolve, reject) => {
-    ips = getServerIps(branch)
-    result = get_picture(ips, picPath, tmpDir)
-    if (result) {
-      resolve(tmpDir);
-    } else if (result === false) {
-      reject("Couldn't find screenshot")
-    }
+    servers = getServerIps(branch)
+    servers.then(ips => {
+      result = getPicture(ips, picPath, tmpDir)
+      if (result) {
+        resolve(tmpDir);
+      } else if (result === false) {
+        reject("Couldn't find screenshot")
+      }
+    })
   })
 }
 
