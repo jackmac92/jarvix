@@ -19,6 +19,7 @@ const runCmd = (cmd) => {
 }
 
 const getAWSConfig = () => {
+  console.log("Getting CBI AWS Server info")
   return new Promise((resolve, reject) => {
     reqParams = {
       url: CBI_ENV_LOCATION,
@@ -26,6 +27,7 @@ const getAWSConfig = () => {
     }
     request(reqParams, (err, res, body) => {
       if (!err && res.statusCode < 400) {
+        console.log("Found Server Info")
         resolve(body)
       }
     })
@@ -60,6 +62,7 @@ const getServerIps = (env) => {
         data["Reservations"].forEach(server => {
           server.Instances.forEach(instance => ips.push(instance["PrivateIpAddress"]))
         })
+        console.log(`Found ${env} server ips`)
         resolve(ips)
       })
     });
@@ -67,6 +70,7 @@ const getServerIps = (env) => {
 }
 
 const open_pic = (picPath) => {
+  console.log("Opening picture")
   switch (os.platform()) {
     case "darwin":
       result = shell.exec(`open ${picPath}`)
@@ -81,8 +85,10 @@ const picFetch = (cmd) => {
   return new Promise( (resolve, reject) => {
     result = shell.exec(cmd, {silent:true})
     if (result.code === 0) {
+      console.log("Found pic")
       resolve(result.toString())
     } else {
+      console.log("Pic not on this server")
       reject(result.stderr)
     }
   })
