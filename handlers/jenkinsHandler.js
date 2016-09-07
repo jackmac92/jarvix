@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 const readline = require('readline-sync');
 const shell = require('shelljs')
-const screenshotGrabber = require('./utils/downloadScreenShot.js')
-const winSetup = require('./utils/newTermWindowSetup.js')
+const screenshotGrabber = require('../utils/downloadScreenShot.js')
+const winSetup = require('../utils/newTermWindowSetup.js')
 
 const setupInfo = winSetup(process.argv[2])
 
@@ -31,4 +31,4 @@ Promise.all(
     if (result.code !== 0) {
       console.log(result.stderr)
     }
-})
+}).catch(reason => console.log(reason))
