@@ -1,5 +1,6 @@
 Setup
 sudo chmod +x install.sh
+set CBI_ROOT environment variable to the dir containing local repos
 sudo ./install.sh
 ./jarvixServer.js
 

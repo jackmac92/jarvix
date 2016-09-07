@@ -15,7 +15,7 @@ const terminalHelper = (cmd, args) => {
   if (typeof(cmd) === "object") {
     throw new Error("Command sent to openTermWithScript must be the name of js file")
   }
-  const scriptPath = path.join(__dirname,"..", `${cmd}.js`)
+  const scriptPath = path.join(__dirname,"..","handlers", `${cmd}.js`)
   switch (os.platform()) {
     case "darwin":
       openTerm = `osascript -e 'tell application "Terminal"' -e 'do script "${scriptPath} '${argsFilePath}' "' -e 'activate' -e  'end tell'`
