@@ -23,17 +23,21 @@ const getWorkingDir = (repo) => {
   return workingDir
 }
 
-const checkRepoReady = () => {
+const checkRepoReady = (repo) => {
+  currBranch = runCmd('git branch | grep "* "').toString().split(/\s/)[1]
+  console.log([currBranch])
+
   status = runCmd('git diff-index --quiet HEAD --')
   if (status.code !== 0) {
     throw new Error(`Stopping due to uncommitted changes in ${repo}`)
   }
 
+
 }
 
 const repoSetup = (repo, branch) => {
   const wd = getWorkingDir(repo)
-  checkRepoReady()
+  const origBranch = checkRepoReady(repo)
   runCmd('git fetch --all')
   runCmd(`git checkout ${branch}`)
   runCmd('git pull')
@@ -41,3 +45,4 @@ const repoSetup = (repo, branch) => {
 }
 
 module.exports = repoSetup
+checkRepoReady()
