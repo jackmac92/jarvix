@@ -1,12 +1,27 @@
 const shell = require("shelljs")
 
-const openRepoInEditor = (dirs) => {
-    if (typeof(dirs) === 'string') {
-        dirs = [dirs]
+const runCmd = (cmd) => {
+  return shell.exec(cmd, {silent:true})
+}
+
+const getEditor = () => {
+  options ['$EDITOR', 'subl']
+  options.forEach(opt => {
+    result = runCmd(`which ${opt}`)
+    if (result.code === 0) {
+      return result.toString()
     }
-    dirs.forEach( (dir, index) => {
-        shell.exec(`subl ${dir}`)
-    });
+  })
+}
+
+const openRepoInEditor = (dirs) => {
+  if (typeof(dirs) === 'string') {
+    dirs = [dirs]
+  }
+  app = getEditor()
+  dirs.forEach( (dir, index) => {
+    runCmd(`${app} ${dir}`)
+  });
 }
 
 module.exports = openRepoInEditor

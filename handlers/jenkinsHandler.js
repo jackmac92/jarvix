@@ -11,7 +11,7 @@ const tmpDir = setupInfo[1]
 
 args.tests.forEach( (el, i) => {
   console.log()
-  console.log(` ${i}: ${el.testName}`)
+  console.log(`${i}: ${el.testName}`)
 })
 
 input = readline.question("Enter space separated numbers for individual screenshots, no input gets all")

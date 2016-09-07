@@ -6,6 +6,7 @@ const main = (argsPath) => {
   args = JSON.parse(fs.readFileSync(argsPath, "utf-8"))
   tmpDir = path.dirname(argsPath)
   process.stdout.write('\033c'); // Clear terminal
+  console.log("\n\n\n")
   return [args, tmpDir]
 }
 
