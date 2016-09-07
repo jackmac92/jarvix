@@ -5,13 +5,16 @@ const runCmd = (cmd) => {
 }
 
 const getEditor = () => {
-  options ['$EDITOR', 'subl']
-  options.forEach(opt => {
+  options = ['$EDITOR', 'subl']
+  var i = 0;
+  while (i < options.length) {
+    opt = options[i]
     result = runCmd(`which ${opt}`)
     if (result.code === 0) {
       return result.toString()
     }
-  })
+    i++
+  }
 }
 
 const openRepoInEditor = (dirs) => {
@@ -20,8 +23,10 @@ const openRepoInEditor = (dirs) => {
   }
   app = getEditor()
   dirs.forEach( (dir, index) => {
-    runCmd(`${app} ${dir}`)
+    result = runCmd(`${app} ${dir}`)
   });
 }
 
 module.exports = openRepoInEditor
+
+openRepoInEditor("/Users/jmccown/cbinsights/admin/")
