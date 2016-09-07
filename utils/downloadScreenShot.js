@@ -60,7 +60,10 @@ const getServerIps = (env) => {
         }
         var ips = []
         data["Reservations"].forEach(server => {
-          server.Instances.forEach(instance => ips.push(instance["PrivateIpAddress"]))
+          server.Instances.forEach(instance => {
+            instIp = instance["PublicIpAddress"] || instance["PrivateIpAddress"]
+            ips.push(instIp)
+          })
         })
         console.log(`Found ${env} server ips`)
         resolve(ips)
@@ -97,13 +100,14 @@ const picFetch = (cmd) => {
 const getPicture = (ips, picPath, tmpDir) => {
   var errCount = 0
   ips.forEach( (ip) => {
-    cmd = `scp ${ip}:${picPath} ${tmpDir}`
+    cmd = `scp ubuntu@${ip}:${picPath} ${tmpDir}`
     pf = picFetch(cmd)
     pf.then(() => {
       picPath = picPath.split("/")[2]
       open_pic(path.join(tmpDir, picPath))
       return true
     }).catch((reason) => {
+      console.log(reason)
       errCount++
       if (errCount === ips.length) {
         return false
