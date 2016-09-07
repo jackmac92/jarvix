@@ -3,8 +3,11 @@ const shell = require('shelljs')
 const path = require('path')
 const tmp = require('tmp')
 const os = require('os')
+const request = require('request')
 
-runCmd = (cmd) => {
+CBI_ENV_LOCATION = 'http://s3.amazonaws.com/cbi-wiki/cbi-env.json'
+
+const runCmd = (cmd) => {
   result = shell.exec(cmd, {silent:true})
   if (result.code === 0) {
     return result.toString()
@@ -15,34 +18,50 @@ runCmd = (cmd) => {
   }
 }
 
-const getServerIps = (env) => {
-  ec2EnvMap = {
-    dev:"dev",
-    staging:"stg",
-    prod:"prd"
-  }
-
-  ec2Env = ec2EnvMap[env]
-
-  const ec2Params = {
-    Filters: [
-      {
-        Name: 'tag:Name',
-        Values: [`ec2.cbi_${ec2Env}.tst.integration-tests`]
-      }
-    ],
-  };
+const getAWSConfig = () => {
   return new Promise((resolve, reject) => {
-    const ec2 = new boto.EC2({region:"us-east-1"})
-    ec2.describeInstances(ec2Params, (err, data) => {
-      if (err) {
-        reject(err)
+    reqParams = {
+      url: CBI_ENV_LOCATION,
+      json: true
+    }
+    request(reqParams, (err, res, body) => {
+      if (!err && res.statusCode < 400) {
+        resolve(body)
       }
-      var ips = []
-      data["Reservations"].forEach(server => {
-        server.Instances.forEach(instance => ips.push(instance["PrivateIpAddress"]))
+    })
+  })
+}
+
+const getServerIps = (env) => {
+  return new Promise((resolve, reject) => {
+    getAWSConfig().then(cfg => {
+      const boxType = 'test-runner'
+      searchKey = cfg[env][boxType]['searchkey']
+      searchVal = cfg[env][boxType]['searchvalue']
+
+      const ec2Params = {
+        Filters: [
+          {
+            Name: `tag:${searchKey}`,
+            Values: [searchVal]
+          },
+          {
+            Name: 'instance-state-name',
+            Values: ['running']
+          }
+        ],
+      };
+      const ec2 = new boto.EC2({region:cfg[env]['region']})
+      ec2.describeInstances(ec2Params, (err, data) => {
+        if (err) {
+          reject(err)
+        }
+        var ips = []
+        data["Reservations"].forEach(server => {
+          server.Instances.forEach(instance => ips.push(instance["PrivateIpAddress"]))
+        })
+        resolve(ips)
       })
-      resolve(ips)
     });
   })
 }
@@ -87,22 +106,15 @@ const getPicture = (ips, picPath, tmpDir) => {
   })
 }
 
-
-const main = (branch, picPath, tmpDir) => {
+const main = (env, picPath, tmpDir) => {
   tmpDir = tmpDir || path.dirname(tmp.dirSync({ mode: 0750, prefix: "cbiHelper_" }).name);
   return new Promise( (resolve, reject) => {
-    servers = getServerIps(branch)
+    servers = getServerIps(env)
     servers.then(ips => {
-      result = getPicture(ips, picPath, tmpDir)
-      if (result) {
+      if (getPicture(ips, picPath, tmpDir)) {
         resolve(tmpDir);
-      } else if (result === false) {
-        reject("Couldn't find screenshot")
       }
     })
   })
 }
-
 module.exports = main
-
-
