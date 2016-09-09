@@ -23,6 +23,8 @@ const isCustomMsg = (msg) => {
 const handler = (message) => {
   const msg = JSON.parse(decodeURIComponent(message))
 
+  console.log(msg)
+
   if (isCustomMsg(msg)) {
       handleCustom(msg)
   }
