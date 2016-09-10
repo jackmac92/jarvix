@@ -1,36 +1,89 @@
 #!/usr/bin/env node
-const readline = require('readline-sync');
 const shell = require('shelljs');
 const screenshotGrabber = require('../utils/downloadScreenShot.js');
 const winSetup = require('../utils/newTermWindowSetup.js');
+const inquirer = require('inquirer')
 
 const setupInfo = winSetup(process.argv[2]);
-
 const screenshotsInfo = setupInfo[0];
 const tmpDir = setupInfo[1];
 
-screenshotsInfo.tests.forEach( (el, i) => {
-  console.log(`${i}: ${el.testName}`);
-})
 
-input = readline.question("Enter space separated numbers for individual screenshots, no input gets all");
-
-
-if (input.length === 0) {
-  pics = args.tests;
-} else {
-  pics = input.split(/\s/).map(n => args.tests[n]);
+const askGetAll = () => {
+  return new Promise((resolve) => {
+    inquirer.prompt([
+      {
+        type: 'list',
+        name: 'getAll',
+        message: 'What do you want to download',
+        choices: [
+          'Download all found screenshots',
+          'Select screenshots to download'
+        ],
+        filter: (val) => {
+          if (val[0] === "D") {
+            return true
+          } else {
+            return void 0
+          }
+        }
+      }
+    ]).then(answers => {
+      resolve(answers.getAll)
+    })
+  })
 }
 
-console.log(`Fetching ${pics.length} screenshots`);
+const askWhich = (tests) => {
+  return new Promise((resolve) => {
+    inquirer.prompt([
+      {
+        type: 'checkbox',
+        message: 'Select screenshots to download',
+        name: 'screenshots',
+        choices: tests.map(tst => {
+          return {
+            name:tst.testName,
+            value: tst
+          }
+        })
+      }
+    ]).then(selection => {
+      resolve(selection.screenshots)
+    })
+  })
+}
 
-Promise.all(
-    pics.map(p => screenshotGrabber(args.branch, p.screenshot, tmpDir))
-  ).then(values => {
-    console.log("Done");
-    input = readline.question("Press enter to delete screenshots and exit");
-    result = shell.exec(`rm -rf ${tmpDir}`);
-    if (result.code !== 0) {
-      console.log(result.stderr);
-    }
-}).catch(reason => console.log(reason))
+const getPicsToDownload = () => {
+  return new Promise((resolve) => {
+    askGetAll().then(answer => {
+      if (answer) {
+        resolve(screenshotsInfo.tests)
+      } else {
+        askWhich(screenshotsInfo.tests).then(selection => {
+          resolve(selection)
+        })
+      }
+    })
+  })
+}
+
+
+getPicsToDownload().then(pics => {
+  console.log(`Fetching ${pics.length} screenshots`);
+
+  Promise.all(
+      pics.map(p => screenshotGrabber(screenshotsInfo.branch, p.screenshot, tmpDir))
+    ).then(values => {
+      console.log("Done");
+      input = readline.question("Press enter to delete screenshots and exit");
+      result = shell.exec(`rm -rf ${tmpDir}`);
+      if (result.code !== 0) {
+        console.log(result.stderr);
+      }
+  }).catch(reason => {
+    console.log(reason)
+  })
+
+})
+
