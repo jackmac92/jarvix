@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-const readline = require('readline-sync');
 const shell = require('shelljs');
 const screenshotGrabber = require('../utils/downloadScreenShot.js');
 const winSetup = require('../utils/newTermWindowSetup.js');
+const utils = require('../utils')
+const inquirer = require('inquirer')
 
 
 setupInfo = winSetup(process.argv[2]);
@@ -19,13 +20,14 @@ const branchConvert = {
 const branch = branchConvert[pic.branch];
 const picPath = pic.screenshot;
 
-readline.question(`Enter to download ${picPath}`);
-
-s = screenshotGrabber(branch, picPath, tmpDir);
-
-s.then((res) => {
-  readline.question("Enter to close");
-  shell.exec(`rm -rf ${tmpDir}`);
+msg = 'Continue to download and open'
+utils.waitForContinue(msg).then(answer => {
+  return screenshotGrabber(branch, picPath, tmpDir);
+}).then((res) => {
+  msg = 'Continue to delete screenshot and exit'
+  utils.waitForContinue(msg).then(answer => {
+    utils.cleanUpTmpDir(tmpDir)
+  })
 }).catch( (reason) => {
   console.log("Something went wrong")
   console.log(reason);

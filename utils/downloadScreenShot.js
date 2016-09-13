@@ -34,9 +34,8 @@ const getAWSConfig = () => {
   })
 }
 
-const getServerIps = (env) => {
+const getServerIps = (env, cfg) => {
   return new Promise((resolve, reject) => {
-    getAWSConfig().then(cfg => {
       const boxType = 'test-runner'
       searchKey = cfg[env][boxType]['searchkey']
       searchVal = cfg[env][boxType]['searchvalue']
@@ -69,7 +68,6 @@ const getServerIps = (env) => {
         resolve(ips)
       })
     });
-  })
 }
 
 const open_pic = (picPath) => {
@@ -98,20 +96,21 @@ const picFetch = (cmd) => {
 }
 
 const getPicture = (ips, picPath, tmpDir) => {
-  var errCount = 0
-  ips.forEach( (ip) => {
-    cmd = `scp ubuntu@${ip}:${picPath} ${tmpDir}`
-    pf = picFetch(cmd)
-    pf.then(() => {
-      picPath = picPath.split("/")[2]
-      open_pic(path.join(tmpDir, picPath))
-      return true
-    }).catch((reason) => {
-      console.log(reason)
-      errCount++
-      if (errCount === ips.length) {
-        return false
-      }
+  return new Promise( (resolve, reject) => {
+    var errCount = 0
+    ips.forEach( (ip) => {
+      cmd = `scp ubuntu@${ip}:${picPath} ${tmpDir}`
+      pf = picFetch(cmd)
+      pf.then(() => {
+        picPath = path.join(tmpDir,picPath.split("/")[2])
+        open_pic(picPath)
+        resolve(picPath)
+      }).catch((reason) => {
+        errCount++
+        if (errCount === ips.length) {
+          reject("Not found on servers provided")
+        }
+      })
     })
   })
 }
@@ -119,12 +118,17 @@ const getPicture = (ips, picPath, tmpDir) => {
 const main = (env, picPath, tmpDir) => {
   tmpDir = tmpDir || path.dirname(tmp.dirSync({ mode: 0750, prefix: "cbiHelper_" }).name);
   return new Promise( (resolve, reject) => {
-    servers = getServerIps(env)
-    servers.then(ips => {
-      if (getPicture(ips, picPath, tmpDir)) {
-        resolve(tmpDir);
-      }
+    getAWSConfig().then(cfg => {
+      return getServerIps(env, cfg)
+    }).then(ips => {
+      return getPicture(ips, picPath, tmpDir)
+    }).then(picPath => {
+      resolve(tmpDir);
+    }).catch(reason => {
+      console.log("Failed to download screenshot")
+      console.log(reason)
     })
   })
 }
+
 module.exports = main

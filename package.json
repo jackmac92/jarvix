@@ -13,7 +13,6 @@
     "aws-sdk": "^2.5.5",
     "inquirer": "^1.1.3",
     "lodash": "^4.15.0",
-    "readline-sync": "^1.4.4",
     "request": "^2.74.0",
     "shelljs": "^0.7.3",
     "tmp": "0.0.28",

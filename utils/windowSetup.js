@@ -1,8 +1,6 @@
-const shell = require("shelljs")
+const utils = require("./index.js")
 
-const runCmd = (cmd) => {
-  return shell.exec(cmd, {silent:true})
-}
+const runCmd = utils.runCmd
 
 const getEditor = () => {
   options = ['$EDITOR', 'subl']
@@ -28,5 +26,3 @@ const openRepoInEditor = (dirs) => {
 }
 
 module.exports = openRepoInEditor
-
-openRepoInEditor("/Users/jmccown/cbinsights/admin/")

@@ -2,12 +2,12 @@
 const shell = require('shelljs');
 const screenshotGrabber = require('../utils/downloadScreenShot.js');
 const winSetup = require('../utils/newTermWindowSetup.js');
+const utils = require('../utils');
 const inquirer = require('inquirer')
 
 const setupInfo = winSetup(process.argv[2]);
 const screenshotsInfo = setupInfo[0];
 const tmpDir = setupInfo[1];
-
 
 const askGetAll = () => {
   return new Promise((resolve) => {
@@ -71,19 +71,19 @@ const getPicsToDownload = () => {
 
 getPicsToDownload().then(pics => {
   console.log(`Fetching ${pics.length} screenshots`);
-
   Promise.all(
       pics.map(p => screenshotGrabber(screenshotsInfo.branch, p.screenshot, tmpDir))
     ).then(values => {
-      console.log("Done");
-      input = readline.question("Press enter to delete screenshots and exit");
-      result = shell.exec(`rm -rf ${tmpDir}`);
-      if (result.code !== 0) {
-        console.log(result.stderr);
-      }
+      msg = 'Continue to exit and delete downloaded pictures'
+      utils.waitForContinue(msg).then(answer => {
+        console.log("Removing tmp dir")
+        result = shell.exec(`rm -rf ${tmpDir}`);
+        if (result.code !== 0) {
+          console.log(result.stderr);
+        }
+      })
   }).catch(reason => {
     console.log(reason)
   })
 
 })
-

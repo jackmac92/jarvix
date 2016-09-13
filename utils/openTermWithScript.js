@@ -1,4 +1,4 @@
-const shell = require('shelljs')
+const runCmd = require('./index.js').runCmd
 const path = require('path')
 const tmp = require('tmp')
 const fs = require('fs')
@@ -28,15 +28,9 @@ const terminalHelper = (cmd, args) => {
       throw new Error("Couldn't detect os or it's not supported")
       break;
   }
-  result = shell.exec(openTerm, {silent: true})
-  if (result.code === 0) {
-    console.log(`Successfully started ${cmd}`)
-  } else {
-    console.log("PROBLEM")
-    console.log(result.stderr)
-    console.log("\n")
-    console.log(openTerm)
-  }
+
+  return runCmd(openTerm)
+
 }
 
 module.exports = terminalHelper
