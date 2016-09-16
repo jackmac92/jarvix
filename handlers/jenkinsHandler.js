@@ -18,13 +18,13 @@ const getPicsToDownload = () => {
     .then(() => {
       resolve(screenshotsInfo.tests)
     }).catch(() => {
-      const msg = 'Select screenshots to download',
+      const msg = 'Select screenshots to download';
       const choices = tests.map(tst => {
         return {
           name:tst.testName,
           value: tst
         }
-      })
+      });
       utils.askWhich(choices, msg).then(selection => {
         resolve(selection)
       })
