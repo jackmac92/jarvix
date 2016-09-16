@@ -2,7 +2,6 @@
 
 const gitHelper = require('../utils/setGitBranches.js');
 const winSetup = require('../utils/newTermWindowSetup.js');
-const shell = require('shelljs');
 const inquirer = require('inquirer')
 const gitUtils = require('../utils/git.js')
 const setupInfo = winSetup(process.argv[2]);
@@ -11,17 +10,18 @@ const tmpDir = setupInfo[1];
 const reviewEls = setupInfo[0];
 
 const reviewSetup = (reviewEls) => {
-  reversions = reviewEls.map( el => {
-    rel = gitHelper(el.repo, el.branch)
-    return () => {
-      const wd = gitUtils.getWorkingDir(rel.repo)
-      shell.cd(wd)
-      gitUtils.checkoutBranch(rel.origBranch)
-    }
+  return new Promise((resolve, reject) => {
+    reversions = reviewEls.map( el => {
+      rel = gitHelper(el.repo, el.branch)
+      return () => {
+        const wd = gitUtils.getWorkingDir(rel.repo)
+        gitUtils.checkoutBranch(rel.origBranch)
+      }
+    })
+    resolve(() => {
+      reversions.forEach(x => x())
+    })
   })
-  return () => {
-    reversions.forEach(x => x())
-  }
 }
 
 const askWhich = (reviewEls) => {
@@ -120,11 +120,10 @@ const keepAsking = () => {
   })
 }
 
-askWhich(reviewEls)
-  .then(rEls =>
-    reviewSetup(rEls)
-  ).then(revert => {
-    keepAsking().then(fin => {
-      revert()
-    })
+askWhich(reviewEls).then(rEls => {
+    return reviewSetup(rEls)
+  }).then(revert => {
+    return keepAsking()
+  }).then(fin => {
+    revert()
   })

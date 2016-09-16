@@ -4,6 +4,8 @@ const screenshotGrabber = require('../utils/downloadScreenShot.js');
 const winSetup = require('../utils/newTermWindowSetup.js');
 const utils = require('../utils');
 const inquirer = require('inquirer')
+const getAWSConfig = require('../utils/getAwsConfig')
+const getServerIps = require('../utils/getServerIps')
 
 const setupInfo = winSetup(process.argv[2]);
 const screenshotsInfo = setupInfo[0];
@@ -71,9 +73,16 @@ const getPicsToDownload = () => {
 
 getPicsToDownload().then(pics => {
   console.log(`Fetching ${pics.length} screenshots`);
-  Promise.all(
-      pics.map(p => screenshotGrabber(screenshotsInfo.branch, p.screenshot, tmpDir))
-    ).then(values => {
+  getAWSConfig().then(cfg => {
+    return getServerIps(screenshotsInfo.env, cfg)
+  }).catch(reason => {
+    console.log("Couldn't get AWS Config")
+    console.log(reason)
+  }).then(ips => {
+    return Promise.all(pics.map(p => screenshotGrabber(ips, p.screenshot, tmpDir)))
+  }).catch(reason => {
+    console.log(reason)
+  }).then(values => {
       msg = 'Continue to exit and delete downloaded pictures'
       utils.waitForContinue(msg).then(answer => {
         console.log("Removing tmp dir")
@@ -85,5 +94,4 @@ getPicsToDownload().then(pics => {
   }).catch(reason => {
     console.log(reason)
   })
-
 })

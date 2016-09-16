@@ -9,7 +9,7 @@ const getInitials = () => (
   runCmd("git config user.name").toString().split(" ").map(n => n[0].toLowerCase())
 )
 
-module.exports = {
+const utils = {
 
   checkRepoReady(repo) {
 
@@ -63,8 +63,13 @@ module.exports = {
     return runCmd('git fetch --all')
   },
 
-  getReviewersBranches() {
-
+  cloneRepo(cbi_root, repo) {
+    shell.cd(cbi_root)
+    runCmd(`git clone git@github.com:cbinsights/${repo}.git`)
+    if (this.listDirs(cbi_root).indexOf(repo) === -1) {
+      throw new Error(`Couldn't find working dir for ${repo}`)
+    }
+    console.log(`Successfully cloned ${repo} repo`)
   },
 
   pull() {
@@ -76,8 +81,9 @@ module.exports = {
       throw new Error("Need to set CBI_ROOT environment var")
     }
     r = process.env.CBI_ROOT
-    if (!repo in this.listDirs(r)) {
-      throw new Error(`Couldn't find working dir for ${repo}`)
+    if (!(repo in this.listDirs(r))) {
+      console.log('Local repo not found, attempting to clone')
+      this.cloneRepo(r, repo)
     }
     workingDir = path.join(r,repo)
     shell.cd(workingDir)
@@ -85,3 +91,6 @@ module.exports = {
   }
 
 }
+
+module.exports = utils
+

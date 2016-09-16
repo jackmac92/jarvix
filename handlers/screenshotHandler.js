@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-const shell = require('shelljs');
 const screenshotGrabber = require('../utils/downloadScreenShot.js');
 const winSetup = require('../utils/newTermWindowSetup.js');
 const utils = require('../utils')
 const inquirer = require('inquirer')
+const getAWSConfig = require('../utils/getAwsConfig')
+const getServerIps = require('../utils/getServerIps')
 
 
 setupInfo = winSetup(process.argv[2]);
@@ -11,24 +12,25 @@ setupInfo = winSetup(process.argv[2]);
 const pic = setupInfo[0];
 const tmpDir = setupInfo[1];
 
-const branchConvert = {
+const envConvert = {
   "develop": "dev",
   "release": "staging",
   "master": "prod"
 }
 
-const branch = branchConvert[pic.branch];
+const env = envConvert[pic.env];
 const picPath = pic.screenshot;
 
 msg = 'Continue to download and open'
 utils.waitForContinue(msg).then(answer => {
-  return screenshotGrabber(branch, picPath, tmpDir);
-}).then((res) => {
+  return getAWSConfig()
+}).then(cfg => {
+  return getServerIps(env, cfg)
+}).then(ips => {
+  return screenshotGrabber(ips, picPath, tmpDir);
+}).then(fin => {
   msg = 'Continue to delete screenshot and exit'
-  utils.waitForContinue(msg).then(answer => {
-    utils.cleanUpTmpDir(tmpDir)
-  })
-}).catch( (reason) => {
-  console.log("Something went wrong")
-  console.log(reason);
+  return utils.waitForContinue(msg)
+}).then(answer => {
+  utils.cleanUpTmpDir(tmpDir)
 })
