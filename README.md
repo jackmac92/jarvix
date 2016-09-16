@@ -18,9 +18,8 @@ Install the chrome extension as an unpacked extension
 Finds test-runner screenshots on jenkins and dev.test.cbinsights.com, downloads and opens them
 Finds branches you are reviewing on crucible to be opened locally
 
-## Bug
-The jarvixServer must be running before the chrome extension begins running. If jarvixServer exits at any point, you'll need to reload the chrome extension
-Chrome > Settings > Extensions. Find the jarvix extension listing and click Reload
+Pics are downloaded to a tmp folder which will be deleted when the script finishes unless otherwise specified
+Repos changed for reviewing will be reverted to the original branch when done, unless otherwise specified
 
 ## Todo
 Finish implementing windowSetup for reviewHandler, so that repos open on the reviewed branch in the editor of your choice
