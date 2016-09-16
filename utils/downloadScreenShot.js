@@ -2,6 +2,9 @@ const shell = require('shelljs')
 const path = require('path')
 const tmp = require('tmp')
 const os = require('os')
+const Promise = require('bluebird');
+const getAWSConfig = require('./getAwsConfig')
+const getServerIps = require('./getServerIps')
 
 CBI_ENV_LOCATION = 'http://s3.amazonaws.com/cbi-wiki/cbi-env.json'
 
@@ -16,7 +19,7 @@ const runCmd = (cmd) => {
   }
 }
 
-const open_pic = (picPath) => {
+const openPic = (picPath) => {
   console.log("Opening picture")
   switch (os.platform()) {
     case "darwin":
@@ -28,47 +31,55 @@ const open_pic = (picPath) => {
   }
 }
 
-const picFetch = (cmd) => {
+const checkServer = (ip, picPath, tmpDir) => {
   return new Promise( (resolve, reject) => {
+    cmd = `scp ubuntu@${ip}:${picPath} ${tmpDir}`
     result = shell.exec(cmd, {silent:true})
     if (result.code === 0) {
-      console.log("Found pic")
-      resolve(result.toString())
-    } else {
-      console.log("Pic not on this server")
-      reject(result.stderr)
+      console.log(`Found pics at ${ip}`)
+      resolve(ip)
     }
   })
 }
-
-const getPicture = (ips, picPath, tmpDir) => {
+const picFetch = (ip, picPath, tmpDir) => {
   return new Promise( (resolve, reject) => {
-    var errCount = 0
-    ips.forEach( (ip) => {
-      cmd = `scp ubuntu@${ip}:${picPath} ${tmpDir}`
-      pf = picFetch(cmd)
-      pf.then(() => {
-        picPath = path.join(tmpDir,picPath.split("/")[2])
-        open_pic(picPath)
-        resolve(picPath)
-      }).catch((reason) => {
-        errCount++
-        if (errCount === ips.length) {
-          reject("Not found on servers provided")
-        }
-      })
-    })
   })
 }
 
-const main = (ips, picPath, tmpDir) => {
+const getPicture = (ip, picPath, tmpDir) => {
+  return new Promise( (resolve, reject) => {
+    cmd = `scp ubuntu@${ip}:${picPath} ${tmpDir}`
+    result = shell.exec(cmd, {silent:true})
+    if (result.code !== 0) {
+      console.log(`Error getting pic ${picPath}`)
+    }
+    localPicPath = path.join(tmpDir,picPath.split("/")[2])
+    openPic(localPicPath)
+    resolve(localPicPath)
+  })
+}
+
+const pickServer = (ips, picPath, tmpDir) => {
+  return new Promise((resolve) => {
+    Promise.any(
+      ips.map(ip => checkServer(ip, picPath, tmpDir))
+    ).then(ip => resolve(ip))
+  })
+}
+
+const main = (env, picPaths, tmpDir) => {
   tmpDir = tmpDir || path.dirname(tmp.dirSync({ mode: 0750, prefix: "cbiHelper_" }).name);
   return new Promise( (resolve, reject) => {
-    getPicture(ips, picPath, tmpDir).then(picPath => {
+    getAWSConfig().then(cfg => {
+      return getServerIps(env, cfg)
+    }).then(ips => {
+      return pickServer(ips, picPaths.pop(), tmpDir)
+    }).then(ip => {
+      return Promise.all(
+        picPaths.map(picPath => getPicture(ip, picPath, tmpDir))
+      )
+    }).then(() => {
       resolve(tmpDir);
-    }).catch(reason => {
-      console.log("Failed to download screenshot")
-      console.log(reason)
     })
   })
 }

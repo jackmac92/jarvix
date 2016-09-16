@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-
 const gitHelper = require('../utils/setGitBranches.js');
 const winSetup = require('../utils/newTermWindowSetup.js');
 const inquirer = require('inquirer')
 const gitUtils = require('../utils/git.js')
 const setupInfo = winSetup(process.argv[2]);
+const Promise = require('bluebird');
 
 const tmpDir = setupInfo[1];
 const reviewEls = setupInfo[0];

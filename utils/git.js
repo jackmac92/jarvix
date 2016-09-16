@@ -1,5 +1,7 @@
 const shell = require('shelljs')
 const path = require('path')
+const Promise = require('bluebird');
+
 
 const runCmd = (cmd) => {
   return shell.exec(cmd, {silent:true})

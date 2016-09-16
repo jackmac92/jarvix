@@ -6,7 +6,7 @@ const utils = require('../utils');
 const inquirer = require('inquirer')
 const getAWSConfig = require('../utils/getAwsConfig')
 const getServerIps = require('../utils/getServerIps')
-
+const Promise = require('bluebird');
 const setupInfo = winSetup(process.argv[2]);
 const screenshotsInfo = setupInfo[0];
 const tmpDir = setupInfo[1];
@@ -73,25 +73,15 @@ const getPicsToDownload = () => {
 
 getPicsToDownload().then(pics => {
   console.log(`Fetching ${pics.length} screenshots`);
-  getAWSConfig().then(cfg => {
-    return getServerIps(screenshotsInfo.env, cfg)
-  }).catch(reason => {
-    console.log("Couldn't get AWS Config")
-    console.log(reason)
-  }).then(ips => {
-    return Promise.all(pics.map(p => screenshotGrabber(ips, p.screenshot, tmpDir)))
-  }).catch(reason => {
-    console.log(reason)
-  }).then(values => {
+  screenshotGrabber(screenshotsInfo.env, pics.map(p => p.screenshot), tmpDir)
+    .then(() => {
       msg = 'Continue to exit and delete downloaded pictures'
       utils.waitForContinue(msg).then(answer => {
-        console.log("Removing tmp dir")
-        result = shell.exec(`rm -rf ${tmpDir}`);
-        if (result.code !== 0) {
-          console.log(result.stderr);
-        }
+        utils.cleanUpTmpDir(tmpDir)
+      }).catch(dont => {
+        utils.moveTmpToDesktop(tmpDir)
       })
-  }).catch(reason => {
-    console.log(reason)
-  })
+    }).catch(reason => {
+      console.log(reason)
+    })
 })

@@ -12,17 +12,31 @@ module.exports = {
   },
 
   cleanUpTmpDir(dir) {
+    console.log("Removing tmp dir")
     shell.exec(`rm -rf ${dir}`);
   },
 
+  moveTmpToDesktop(tmpDir) {
+    console.log("Moving tmp dir files to Desktop")
+    shell.exec(`mv ${tmpDir}/* ~/Desktop`)
+  },
+
   waitForContinue(msg) {
-    return inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'continue',
-        message: msg,
-        default: true
-      }
-    ])
+    return new Promise((resolve, reject) => {
+      inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'continue',
+          message: msg,
+          default: true
+        }
+      ]).then(answer => {
+        if (answer.continue) {
+          resolve()
+        } else {
+          reject()
+        }
+      })
+    })
   }
 }
