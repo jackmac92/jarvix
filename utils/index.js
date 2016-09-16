@@ -1,7 +1,8 @@
 const shell = require('shelljs');
 const inquirer = require('inquirer')
+const Promise = require('bluebird');
 
-module.exports = {
+const utils = {
   runCmd(cmd) {
     result = shell.exec(cmd, {silent: true})
     if (result.code === 0) {
@@ -19,6 +20,29 @@ module.exports = {
   moveTmpToDesktop(tmpDir) {
     console.log("Moving tmp dir files to Desktop")
     shell.exec(`mv ${tmpDir}/* ~/Desktop`)
+  },
+
+  finish(msg) {
+    this.waitForContinue(msg).then(answer => {
+      this.cleanUpTmpDir(tmpDir)
+    }).catch(dont => {
+      this.moveTmpToDesktop(tmpDir)
+    })
+  },
+
+  askWhich(choices, msg) {
+    return new Promise((resolve) => {
+      inquirer.prompt([
+        {
+          type: 'checkbox',
+          message: msg,
+          name: 'whatever',
+          choices: choices
+        }
+      ]).then(selection => {
+        resolve(selection.whatever)
+      })
+    })
   },
 
   waitForContinue(msg) {
@@ -40,3 +64,5 @@ module.exports = {
     })
   }
 }
+
+module.exports = utils
