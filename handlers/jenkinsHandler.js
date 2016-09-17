@@ -14,12 +14,13 @@ const tmpDir = setupInfo[1];
 
 const getPicsToDownload = () => {
   return new Promise((resolve) => {
-    utils.waitForContinue("[Y]: Download all, [n] Select individual screenshots for download")
+    const pics = screenshotsInfo.tests;
+    utils.waitForContinue("[Y] Download all || [n] Select individual screenshots for download")
     .then(() => {
-      resolve(screenshotsInfo.tests)
+      resolve(pics)
     }).catch(() => {
       const msg = 'Select screenshots to download';
-      const choices = tests.map(tst => {
+      const choices = pics.map(tst => {
         return {
           name:tst.testName,
           value: tst
@@ -39,7 +40,5 @@ getPicsToDownload().then(pics => {
     .then(() => {
       msg = 'Continue to exit and delete downloaded pictures'
       utils.finish(msg)
-    }).catch(reason => {
-      console.log(reason)
     })
 })
