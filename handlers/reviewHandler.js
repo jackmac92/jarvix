@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-const gitHelper = require('../utils/setGitBranches.js');
-const winSetup = require('../utils/newTermWindowSetup.js');
+const Promise = require('bluebird');
 const inquirer = require('inquirer')
+const winSetup = require('../utils/newTermWindowSetup.js');
+const gitHelper = require('../utils/setGitBranches.js');
 const gitUtils = require('../utils/git.js')
 const setupInfo = winSetup(process.argv[2]);
-const Promise = require('bluebird');
 
 const tmpDir = setupInfo[1];
 const reviewEls = setupInfo[0];
@@ -20,26 +20,6 @@ const reviewSetup = (reviewEls) => {
     })
     resolve(() => {
       reversions.forEach(x => x())
-    })
-  })
-}
-
-const askWhich = (reviewEls) => {
-  return new Promise((resolve) => {
-    inquirer.prompt([
-      {
-        type: 'checkbox',
-        message: 'Select branches to review',
-        name: 'branches',
-        choices: reviewEls.map(re => {
-          return {
-            name:`${re.repo} ${re.branch}`,
-            value: re
-          }
-        })
-      }
-    ]).then(selection => {
-      resolve(selection.branches)
     })
   })
 }
@@ -77,8 +57,19 @@ const reviewPrompts = [
   }
 ]
 
+const chooseReviewEls = (reviewEls) => {
+  const message = 'Select branches to review',
+  const choices = reviewEls.map(re => {
+    return {
+      name:`${re.repo} ${re.branch}`,
+      value: re
+    }
+  })
+  return utils.askWhich(choices, message)
+}
+
 const handlePatch = () => {
-  askWhich(reviewEls)
+  chooseReviewEls(reviewEls)
     .then(patchBranches => {
       patchBranches.forEach(b => {
         gitUtils.makePatch(b.repo)
@@ -104,12 +95,6 @@ const keepAsking = () => {
               gitUtils.getWorkingDir(b.repo)
               gitUtils.clearLocalChanges()
             })
-          case 'update':
-            reviewEls.forEach(b => {
-              gitUtils.getWorkingDir(b.repo)
-              gitUtils.pull()
-            })
-            break;
         }
         if (answers.continue) {
           keepAsking().then(() => resolve())
@@ -120,7 +105,7 @@ const keepAsking = () => {
   })
 }
 
-askWhich(reviewEls).then(rEls => {
+chooseReviewEls(reviewEls).then(rEls => {
     return reviewSetup(rEls)
   }).then(revert => {
     return keepAsking()
