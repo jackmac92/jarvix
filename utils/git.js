@@ -21,6 +21,14 @@ const utils = {
     }
   },
 
+  getCbiRoot() {
+    if (process.env.CBI_ROOT) {
+      return process.env.CBI_ROOT
+    } else {
+      throw new Error("Need to set CBI_ROOT environment var")
+    }
+  },
+
   currentGitBranch() {
     return runCmd('git branch | grep "* "').toString().split(/\s/)[1]
   },
@@ -65,10 +73,14 @@ const utils = {
     return runCmd('git fetch --all')
   },
 
+  repoHasBeenCloned(repo) {
+    return this.listDirs(process.env.CBI_ROOT).indexOf(repo) != -1
+  },
+
   cloneRepo(cbi_root, repo) {
     shell.cd(cbi_root)
     runCmd(`git clone git@github.com:cbinsights/${repo}.git`)
-    if (this.listDirs(cbi_root).indexOf(repo) === -1) {
+    if (!(this.repoHasBeenCloned(repo))) {
       throw new Error(`Couldn't find working dir for ${repo}`)
     }
     console.log(`Successfully cloned ${repo} repo`)
@@ -79,11 +91,8 @@ const utils = {
   },
 
   getWorkingDir(repo) {
-    if (!(process.env.CBI_ROOT)) {
-      throw new Error("Need to set CBI_ROOT environment var")
-    }
-    r = process.env.CBI_ROOT
-    if (!(repo in this.listDirs(r))) {
+    r = this.getCbiRoot()
+    if (!(this.repoHasBeenCloned(repo))) {
       console.log('Local repo not found, attempting to clone')
       this.cloneRepo(r, repo)
     }
@@ -91,8 +100,6 @@ const utils = {
     shell.cd(workingDir)
     return workingDir
   }
-
 }
 
 module.exports = utils
-

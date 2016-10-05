@@ -35,10 +35,7 @@ const getPicsToDownload = () => {
 
 
 getPicsToDownload().then(pics => {
-  console.log(`Fetching ${pics.length} screenshots`);
-  screenshotGrabber(screenshotsInfo.env, pics.map(p => p.screenshot), tmpDir)
-    .then(() => {
-      msg = 'Continue to exit and delete downloaded pictures'
-      utils.finish(msg)
-    })
+  return screenshotGrabber(screenshotsInfo.env, pics.map(p => p.screenshot), tmpDir)
+}).then(() => {
+  utils.finish('Continue to exit and delete downloaded pictures')
 })

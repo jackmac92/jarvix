@@ -31,8 +31,13 @@ const getServerIps = (env, cfg) => {
             ips.push(instIp)
           })
         })
-        console.log(`Found ${env} server ips`)
-        resolve(ips)
+        if (ips.length > 0) {
+          console.log(`Found ${env} server ips`)
+          resolve(ips)
+        } else {
+          console.log("Unable to find server ips")
+          reject()
+        }
       })
     });
 }

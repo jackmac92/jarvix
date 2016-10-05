@@ -1,5 +1,7 @@
-const request = require('request')
+const request = require('request');
 const Promise = require('bluebird');
+
+const CBI_ENV_LOCATION = 'http://s3.amazonaws.com/cbi-wiki/cbi-env.json';
 
 const getAWSConfig = () => {
   console.log("Getting CBI AWS Server info")

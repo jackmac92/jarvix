@@ -4,8 +4,8 @@ const inquirer = require('inquirer')
 const winSetup = require('../utils/newTermWindowSetup.js');
 const gitHelper = require('../utils/setGitBranches.js');
 const gitUtils = require('../utils/git.js')
+const utils = require('../utils')
 const setupInfo = winSetup(process.argv[2]);
-
 const tmpDir = setupInfo[1];
 const reviewEls = setupInfo[0];
 
@@ -58,7 +58,7 @@ const reviewPrompts = [
 ]
 
 const chooseReviewEls = (reviewEls) => {
-  const message = 'Select branches to review',
+  const message = 'Select branches to review'
   const choices = reviewEls.map(re => {
     return {
       name:`${re.repo} ${re.branch}`,
@@ -108,7 +108,5 @@ const keepAsking = () => {
 chooseReviewEls(reviewEls).then(rEls => {
     return reviewSetup(rEls)
   }).then(revert => {
-    return keepAsking()
-  }).then(fin => {
-    revert()
+    keepAsking().then(fin => revert())
   })
