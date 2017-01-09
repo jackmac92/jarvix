@@ -22,11 +22,10 @@ export default {
     }
   },
   getCbiRoot() {
-    if (process.env.CBI_ROOT) {
-      return process.env.CBI_ROOT;
-    } else {
+    if (!process.env.CBI_ROOT) {
       throw new Error("Need to set CBI_ROOT environment var");
     }
+    return process.env.CBI_ROOT;
   },
   setupForLocalEdits() {
     const branch = this.currentGitBranch();

@@ -1,7 +1,7 @@
-#!/usr/bin/env node
+#!/usr/bin/env babel-node
 import { Server as WSS } from 'ws';
-import openTerm from './utils/openTermWithScript.js';
-import screenshotGrabber from './utils/download/screenShot.js';
+import openTerm from './utils/openTermWithScript';
+import screenshotGrabber from './utils/download/screenShot';
 
 const isCustomMsg = ({ data = null }) => {
   if (data === null) {

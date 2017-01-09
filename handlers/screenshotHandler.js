@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env babel-node
 import screenshotGrabber from '../utils/download/screenShot.js';
 import winSetup from '../utils/newTermWindowSetup.js';
 import utils from '../utils';
