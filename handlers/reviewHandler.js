@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-const Promise = require('bluebird');
-const inquirer = require('inquirer')
-const winSetup = require('../utils/newTermWindowSetup.js');
-const gitHelper = require('../utils/setGitBranches.js');
-const gitUtils = require('../utils/git.js')
-const utils = require('../utils')
+import inquirer from 'inquirer';
+import winSetup from '../utils/newTermWindowSetup';
+import gitHelper from '../utils/git/setGitBranches';
+import gitUtils from '../utils/git/';
+import utils from '../utils';
+
 const setupInfo = winSetup(process.argv[2]);
 const tmpDir = setupInfo[1];
 const reviewEls = setupInfo[0];
@@ -78,7 +78,6 @@ const handlePatch = () => {
     })
 }
 
-
 const keepAsking = () => {
   return new Promise((resolve) => {
     inquirer.prompt(reviewPrompts)
@@ -105,8 +104,8 @@ const keepAsking = () => {
   })
 }
 
-chooseReviewEls(reviewEls).then(rEls => {
-    return reviewSetup(rEls)
-  }).then(revert => {
+chooseReviewEls(reviewEls)
+   .then(rEls => reviewSetup(rEls))
+   .then(revert =>
     keepAsking().then(fin => revert())
-  })
+  );

@@ -1,11 +1,11 @@
-const runCmd = require('./index.js').runCmd
-const path = require('path')
-const tmp = require('tmp')
-const fs = require('fs')
-const os = require('os')
+import { runCmd } from './index.js'
+import path from 'path';
+import tmp from 'tmp';
+import fs from 'fs';
+import os from 'os';
 
 const terminalHelper = (cmd, args) => {
-  const tmpDir = tmp.dirSync({ mode: 0750, prefix: `${cmd}_` });
+  const tmpDir = tmp.dirSync({ mode: parseInt('0750'), prefix: `${cmd}_` });
 
   const argsFilePath = path.join(tmpDir.name, "args.json")
 
@@ -33,4 +33,4 @@ const terminalHelper = (cmd, args) => {
 
 }
 
-module.exports = terminalHelper
+export default terminalHelper

@@ -1,26 +1,26 @@
 #!/usr/bin/env node
-const shell = require('shelljs');
-const screenshotGrabber = require('../utils/downloadScreenShot.js');
-const winSetup = require('../utils/newTermWindowSetup.js');
-const utils = require('../utils');
-const inquirer = require('inquirer')
-const getAWSConfig = require('../utils/getAwsConfig')
-const getServerIps = require('../utils/getServerIps')
-const Promise = require('bluebird');
+import shell from 'shelljs';
+import infoGrabber from '../utils/download/testInfo.js';
+import winSetup from '../utils/newTermWindowSetup.js';
+import utils from '../utils';
+import inquirer from 'inquirer';
+import getAWSConfig from '../utils/awsConfig';
+import getServerIps from '../utils/getServerIps';
+
 const setupInfo = winSetup(process.argv[2]);
 const screenshotsInfo = setupInfo[0];
 const tmpDir = setupInfo[1];
 
+const selectTests = () =>
+  new Promise((resolve) => {
+    const tests = screenshotsInfo.tests
 
-const getPicsToDownload = () => {
-  return new Promise((resolve) => {
-    const pics = screenshotsInfo.tests;
-    utils.waitForContinue("[Y] Download all || [n] Select individual screenshots for download")
+    utils.waitForContinue("[Y] Download all || [n] Select individual tests")
     .then(() => {
-      resolve(pics)
+      resolve(tests)
     }).catch(() => {
-      const msg = 'Select screenshots to download';
-      const choices = pics.map(tst => {
+      const msg = 'Select tests';
+      const choices = tests.map(tst => {
         return {
           name:tst.testName,
           value: tst
@@ -31,11 +31,10 @@ const getPicsToDownload = () => {
       })
     })
   })
-}
 
 
-getPicsToDownload().then(pics => {
-  return screenshotGrabber(screenshotsInfo.env, pics.map(p => p.screenshot), tmpDir)
-}).then(() => {
+selectTests().then(tests =>
+  infoGrabber(screenshotsInfo.env, tests, tmpDir)
+).then(() =>
   utils.finish('Continue to exit and delete downloaded pictures')
-})
+)

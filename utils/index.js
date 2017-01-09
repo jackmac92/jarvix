@@ -1,8 +1,21 @@
-const shell = require('shelljs');
-const inquirer = require('inquirer')
-const Promise = require('bluebird');
+import shell from 'shelljs';
+import inquirer from 'inquirer';
 
-const utils = {
+export default {
+  exec(cmd) {
+    return shell.exec(cmd, {silent: true})
+  },
+  pinkyExec(cmd) {
+    return new Promise((resolve, reject) => {
+      const result = shell.exec(cmd, { silent: true})
+      const code = result.code
+      if (code === 0) {
+        resolve(result.stdout)
+      } else {
+        reject(result.stderr)
+      }
+    })
+  },
   runCmd(cmd) {
     result = shell.exec(cmd, {silent: true})
     if (result.code === 0) {
@@ -11,17 +24,14 @@ const utils = {
       return result.stderr
     }
   },
-
   cleanUpTmpDir(dir) {
     console.log("Removing tmp dir")
     shell.exec(`rm -rf ${dir}`);
   },
-
   moveTmpToDesktop(tmpDir) {
     console.log("Moving tmp dir files to Desktop")
-    shell.exec(`mv ${tmpDir}/* ~/Desktop`)
+    shell.exec(`mv ${tmpDir}` ` ~/Desktop`)
   },
-
   finish(msg) {
     this.waitForContinue(msg).then(answer => {
       this.cleanUpTmpDir(tmpDir)
@@ -29,7 +39,6 @@ const utils = {
       this.moveTmpToDesktop(tmpDir)
     })
   },
-
   askWhich(choices, msg) {
     return new Promise((resolve) => {
       inquirer.prompt([
@@ -44,7 +53,6 @@ const utils = {
       })
     })
   },
-
   waitForContinue(msg) {
     return new Promise((resolve, reject) => {
       inquirer.prompt([
@@ -64,5 +72,3 @@ const utils = {
     })
   }
 }
-
-module.exports = utils

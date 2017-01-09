@@ -1,13 +1,11 @@
-const utils = require("./index.js")
-
-const runCmd = utils.runCmd
+import { runCmd } from './index.js';
 
 const getEditor = () => {
   options = ['$EDITOR', 'subl']
-  var i = 0;
+  let i = 0;
   while (i < options.length) {
-    opt = options[i]
-    result = runCmd(`which ${opt}`)
+    const opt = options[i];
+    const result = runCmd(`which ${opt}`)
     if (result.code === 0) {
       return result.toString()
     }
@@ -25,4 +23,4 @@ const openRepoInEditor = (dirs) => {
   });
 }
 
-module.exports = openRepoInEditor
+export default openRepoInEditor;

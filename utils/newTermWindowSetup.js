@@ -1,13 +1,12 @@
-const path = require('path')
-const shell = require('shelljs')
-const fs = require('fs')
+import path from 'path';
+import fs from 'fs';
 
 const main = (argsPath) => {
-  args = JSON.parse(fs.readFileSync(argsPath, "utf-8"))
-  tmpDir = path.dirname(argsPath)
+  const args = JSON.parse(fs.readFileSync(argsPath, "utf-8"));
+  const tmpDir = path.dirname(argsPath);
   process.stdout.write('\033c'); // Clear terminal
-  console.log("\n\n")
-  return [args, tmpDir]
+  console.log("\n\n");
+  return [args, tmpDir];
 }
 
-module.exports = main
+export default main;
