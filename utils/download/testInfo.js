@@ -8,9 +8,7 @@ import downloadTestDir from './testDir';
 import getAWSConfig from '../awsConfig';
 import getServerIps from '../getServerIps';
 
-const open = (path) => {
-  shell.exec(`open ${path}`, { silent: true, async: true });
-};
+const open = targetPath => shell.exec(`open ${targetPath}`);
 
 const serverTestCall = (ip, picPath) =>
   new Promise((resolve, reject) => {
@@ -19,7 +17,7 @@ const serverTestCall = (ip, picPath) =>
   });
 
 const checkServer = (ip, picPath) =>
-  new Promise((resolve, reject) => {
+  new Promise((resolve) => {
     serverTestCall(ip, picPath)
       .then(resolve)
       .catch((reason) => {});
@@ -36,7 +34,8 @@ const pickServer = (ips, picPath) =>
 const noWork = () => console.log('Ok');
 
 const getAllTestsInfo = (ip, tests, tmpDir) => new Promise((resolve, reject) => {
-  tmpDir = tmpDir || path.dirname(tmp.dirSync({ mode: 750, prefix: 'cbiHelper_' }).name);
+  tmpDir = tmpDir || path.dirname(tmp.dirSync({ mode: 488, prefix: 'cbiHelper_' }).name);
+  console.log(tmpDir);
   const spinners = new MultiSpinner(tests.map(t => t.testName));
   const fetches = tests.map(t => getSingleTestInfo(ip, t, tmpDir, spinners, t.testName));
   Promise.all(fetches).then((results) => {
@@ -67,20 +66,18 @@ const main = (env, tests, tmpDir) => {
   if (tests.length === 0) return noWork();
   return new Promise((resolve, reject) => {
     console.log(`Fetching info for ${tests.length} tests from ${env} test-runner`);
-    getAWSConfig().then(cfg =>
-      getServerIps(env, cfg)
-    ).then(ips => pickServer(ips, tests[0].dir)
-    ).then(ip => getAllTestsInfo(ip, tests, tmpDir)
-    ).then(() => resolve());
+    getAWSConfig()
+      .then(cfg => getServerIps(env, cfg))
+      .then(ips => pickServer(ips, tests[0].dir))
+      .then(ip => getAllTestsInfo(ip, tests, tmpDir))
+      .then(() => resolve());
   });
 };
 
 
 if (require.main === module) {
-  env = process.argv[2];
-  picPath = process.argv[3];
-  console.log(env);
-  console.log(picPath);
+  const env = process.argv[2];
+  const picPath = process.argv[3];
   main(env, [picPath]);
 }
 
