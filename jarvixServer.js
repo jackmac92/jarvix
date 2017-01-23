@@ -59,7 +59,7 @@ const handleCustom = (msg) => {
       openTerm("screenshotHandler", msg.data);
       break;
 
-    case "jenkinsScreenshot":
+    case "jenkinsHandler":
       openTerm("jenkinsHandler", msg.data);
       break;
 
