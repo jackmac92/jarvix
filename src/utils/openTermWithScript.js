@@ -1,11 +1,11 @@
-import path from 'path';
-import tmp from 'tmp';
-import fs from 'fs';
-import os from 'os';
-import { runCmd } from './index';
+const path = require('path');
+const tmp = require('tmp');
+const fs = require('fs');
+const os = require('os');
+const runCmd = require('./index').runCmd;
 
 const terminalHelper = (cmd, args = '') => {
-  const tmpDir = tmp.dirSync({ mode: 750, prefix: `${cmd}_` });
+  const tmpDir = tmp.dirSync({ mode: '0750', prefix: `${cmd}_` });
 
   const argsFilePath = path.join(tmpDir.name, 'args.json');
 
@@ -25,7 +25,7 @@ const terminalHelper = (cmd, args = '') => {
       break;
     case 'win32':
     default:
-      throw new Error("Couldn't detect os or it's not supported");
+      throw new Error("Windows... gross");
   }
 
   return runCmd(openTerm);

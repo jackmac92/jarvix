@@ -11,35 +11,35 @@ const new_scheme = {
   theme: 'Material-Theme.sublime-theme'
 };
 
-switch(os.platform()) {
+let settingsPath;
+
+switch (os.platform()) {
   case 'darwin':
     settingsPath = `${process.env.HOME}/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings`
     break;
   case 'linux':
     settingsPath = `${process.env.HOME}/.config/sublime-text-3/Packages/User/Preferences.sublime-settings`
     break;
+  default:
+    throw new Error('cant find shit cnat do shit');
 }
 
-const applySettings = (prefPath, settings) => {
-  fs.writeFile(prefPath, JSON.stringify(settings, null, 4))
-}
+const applySettings = (prefPath, settings) =>
+  fs.writeFile(prefPath, JSON.stringify(settings, null, 4));
 
 const updateSublSettings = (settingsJson) => {
-  if (settingsJson === 'test') {
-    settingsJson = new_scheme
-  }
-  origSettings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'))
-  tmpSettings = { ...origSettings }
+  const origSettings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+  const tmpSettings = { ...origSettings };
   // save for easy revert in case something screws up
-  newSettings = {
+  const newSettings = {
     ...tmpSettings,
     ...settingsJson
-  }
-  applySettings(settingsPath, newSettings)
+  };
+  applySettings(settingsPath, newSettings);
   const revertChanges = () => {
-    applySettings(settingsPath, origSettings)
-  }
-  return revertChanges
-}
+    applySettings(settingsPath, origSettings);
+  };
+  return revertChanges;
+};
 
 export default updateSublSettings;

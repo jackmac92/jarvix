@@ -11,7 +11,7 @@ const getServerIps = (env, cfg) =>
         { Name: 'instance-state-name', Values: ['running'] }
       ]
     };
-    const ec2 = new boto.EC2({ region: cfg[env].region });
+    const ec2 = new boto.EC2({ region: cfg[env].region });
     ec2.describeInstances(ec2Params, (err, data) => {
       if (err) reject(err);
       const ips = data.Reservations.reduce((accum, { Instances }) => ([

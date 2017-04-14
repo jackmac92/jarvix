@@ -1,3 +1,4 @@
+import Promise from 'bluebird'
 import MultiSpinner from 'multispinner';
 import shell from 'shelljs';
 import path from 'path';
@@ -13,7 +14,9 @@ const open = targetPath => shell.exec(`open ${targetPath}`);
 const serverTestCall = (ip, picPath) =>
   new Promise((resolve, reject) => {
     const cmd = `ssh ${ip} "test -e ${picPath}"`;
-    shell.exec(cmd, { silent: true }, code => (code === 0) ? resolve(ip) : reject());
+    shell.exec(cmd, { silent: true }, (code) => {
+      code === 0  ? resolve(ip) : reject();
+    });
   });
 
 const checkServer = (ip, picPath) =>
@@ -34,9 +37,11 @@ const pickServer = (ips, picPath) =>
 const noWork = () => console.log('Ok');
 
 const getAllTestsInfo = (ip, tests, tmpDir) => new Promise((resolve, reject) => {
-  tmpDir = tmpDir || path.dirname(tmp.dirSync({ mode: 488, prefix: 'cbiHelper_' }).name);
+  tmpDir = tmpDir || path.dirname(tmp.dirSync({ mode: 750, prefix: 'cbiHelper_' }).name);
   console.log(tmpDir);
-  const spinners = new MultiSpinner(tests.map(t => t.testName));
+  const spinners = new MultiSpinner(tests.map((t, idx) => ({
+    [`spin-${idx}`]: t.testName
+  })));
   const fetches = tests.map(t => getSingleTestInfo(ip, t, tmpDir, spinners, t.testName));
   Promise.all(fetches).then((results) => {
     spinners.on('done', () => {
@@ -64,7 +69,7 @@ const getSingleTestInfo = (ip, t, tmpDir, spinners, spinnerID) =>
 
 const main = (env, tests, tmpDir) => {
   if (tests.length === 0) return noWork();
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     console.log(`Fetching info for ${tests.length} tests from ${env} test-runner`);
     getAWSConfig()
       .then(cfg => getServerIps(env, cfg))

@@ -42,25 +42,21 @@ export const askWhich = (choices, msg) => new Promise((resolve) => {
     resolve(selection.whatever);
   });
 });
-export const waitForContinue = msg => new Promise((resolve, reject) => {
-  inquirer.prompt([
-    {
+export const waitForContinue = msg =>
+  new Promise((resolve) => {
+    inquirer.prompt([{
       type: 'confirm',
       name: 'continue',
       message: msg,
       default: true
-    }
-  ]).then((answer) => {
-    if (answer.continue) {
-      resolve();
+    }]).then(answer => resolve(answer.continue));
+  });
+
+export const finish = (msg, tmpDir) =>
+  waitForContinue(msg).then((wantsCleanup) => {
+    if (wantsCleanup) {
+      cleanUpTmpDir(tmpDir);
     } else {
-      reject();
+      moveTmpToDesktop(tmpDir);
     }
   });
-});
-export const finish = (msg, tmpDir) => {
-  waitForContinue(msg)
-    .then(() => cleanUpTmpDir(tmpDir))
-    .catch(() => moveTmpToDesktop(tmpDir));
-};
-
