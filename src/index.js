@@ -1,9 +1,15 @@
 #!/usr/bin/env babel-node
-
+import express from 'express';
 import { Server as WSS } from 'ws';
 import openTerm from './utils/openTermWithScript';
 
-console.log('Going up');
+const echo = console.log;
+const echod = console.dir;
+
+const WS_PORT = process.env.APPPORT;
+const CMD_PORT = 3009;
+
+echo('Going up');
 
 const isCustomMsg = ({ data = null }) => {
   if (data === null) {
@@ -16,41 +22,46 @@ const isCustomMsg = ({ data = null }) => {
   return false;
 };
 
-const cxs = [];
-
-const handler = (message) => {
-  const msg = JSON.parse(decodeURIComponent(message));
-  console.log(msg);
-  if (isCustomMsg(msg)) {
-    const { data, action } = msg;
-    console.log(`Received task ${action}`);
-    openTerm(action, data);
-  }
-  const errors = [];
-  cxs.forEach((cx, i) => {
-    try {
-      return cx.send(msg);
-    } catch (err) {
-      return errors.push(i);
-    }
+const makeServer = cmdSender => {
+  const app = express();
+  app.get('/jarvix/:cmd', (req, res) => {
+    const { cmd } = req.params;
+    const options = req.query;
+    cmdSender(cmd, options);
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(response));
   });
-  const results = [];
-  for (let ii = errors.length - 1; ii >= 0; ii -= 1) {
-    const i = errors[ii];
-    results.push(cxs.splice(i, 1));
+  return app;
+};
+
+const makeHandler = ws => (cmd, options) => {
+  switch (cmd.type) {
+    case 'wildcard': {
+      const { action } = cmd;
+      ws.send({ action, opts: options });
+      break;
+    }
+    default:
+      throw new Error(`Unrecognized command type "${cmd.type}"`);
   }
-  return results;
 };
 
 const config = {
-  port: '7442',
-  host: 'localhost'
+  port: WS_PORT,
+  host: '0.0.0.0'
 };
 
 const wss = new WSS(config);
 
-
-wss.on('connection', (ws) => {
-  cxs.push(ws);
-  return ws.on('message', handler);
+wss.on('connection', ws => {
+  makeServer(makeHandler(ws)).listen(CMD_PORT);
+  ws.on('message', (message, flags) => {
+    const msg = JSON.parse(decodeURIComponent(message));
+    echod(msg);
+    echod(flags);
+    if (isCustomMsg(msg)) {
+      const { data, action } = msg;
+      openTerm(action, data);
+    }
+  });
 });
