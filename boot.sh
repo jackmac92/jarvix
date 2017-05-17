@@ -5,7 +5,7 @@ builder() {
 }
 
 run() {
-    docker run -ti jarvix-host
+    docker run -p 7442:7442 jarvix-host
 }
 
 if [[ $(docker images | grep -q jarvix-host) ]]; then

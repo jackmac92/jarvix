@@ -11,8 +11,10 @@ const terminalHelper = (cmd, args = '') => {
 
   fs.writeFile(argsFilePath, JSON.stringify(args, null, 4));
 
-  if (typeof (cmd) === 'object') {
-    throw new Error('Command sent to openTermWithScript must be the name of js file');
+  if (typeof cmd === 'object') {
+    throw new Error(
+      'Command sent to openTermWithScript must be the name of js file'
+    );
   }
   const scriptPath = path.join(__dirname, '..', 'handlers', `${cmd}.js`);
   let openTerm;
@@ -25,7 +27,7 @@ const terminalHelper = (cmd, args = '') => {
       break;
     case 'win32':
     default:
-      throw new Error("Windows... gross");
+      throw new Error('Windows... gross');
   }
 
   return runCmd(openTerm);

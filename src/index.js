@@ -1,4 +1,5 @@
 #!/usr/bin/env babel-node
+import isDocker from 'is-docker';
 import express from 'express';
 import { Server as WSS } from 'ws';
 import openTerm from './utils/openTermWithScript';
@@ -6,7 +7,8 @@ import openTerm from './utils/openTermWithScript';
 const echo = console.log;
 const echod = console.dir;
 
-const WS_PORT = process.env.APPPORT;
+const HOSTNAME = isDocker() ? '0.0.0.0' : 'localhost';
+const WS_PORT = process.env.APPPORT || 7442;
 const CMD_PORT = 3009;
 
 echo('Going up');
@@ -29,7 +31,7 @@ const makeServer = cmdSender => {
     const options = req.query;
     cmdSender(cmd, options);
     res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify(response));
+    res.send(JSON.stringify(`Got ${cmd}`));
   });
   return app;
 };
@@ -48,17 +50,17 @@ const makeHandler = ws => (cmd, options) => {
 
 const config = {
   port: WS_PORT,
-  host: '0.0.0.0'
+  host: HOSTNAME
 };
 
 const wss = new WSS(config);
 
 wss.on('connection', ws => {
+  echo('NewConnection');
   makeServer(makeHandler(ws)).listen(CMD_PORT);
   ws.on('message', (message, flags) => {
     const msg = JSON.parse(decodeURIComponent(message));
     echod(msg);
-    echod(flags);
     if (isCustomMsg(msg)) {
       const { data, action } = msg;
       openTerm(action, data);
