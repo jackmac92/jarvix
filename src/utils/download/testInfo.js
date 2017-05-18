@@ -1,13 +1,9 @@
 import Promise from 'bluebird';
-import MultiSpinner from 'multispinner';
 import shell from 'shelljs';
 import path from 'path';
 import tmp from 'tmp';
-import os from 'os';
-import { getServerIps } from '/Users/jmccown/worksideprojects/cbiServerUtils/';
-import downloadScreenShots from './screenShot';
-import downloadTestDir from './testDir';
-
+import { getServersByRole } from 'cbiServerUtils';
+import getFiles from '../getFileFromServer';
 const open = targetPath => shell.exec(`open ${targetPath}`);
 
 const serverTestCall = (ip, picPath) =>
@@ -18,79 +14,51 @@ const serverTestCall = (ip, picPath) =>
     });
   });
 
-const checkServer = (ip, picPath) =>
-  new Promise(resolve => {
-    serverTestCall(ip, picPath).then(resolve).catch(reason => {});
-  });
+const checkServer = (ip, picPath) => serverTestCall(ip, picPath).catch(x => {});
 
 const pickServer = (ips, picPath) =>
-  new Promise(resolve => {
-    if (ips.length === 1) resolve(ips[0]);
-    Promise.any(ips.map(ip => checkServer(ip, picPath))).then(resolve);
-  });
+  Promise.any(ips.map(ip => checkServer(ip, picPath)));
 
 const noWork = () => console.log('Ok');
 
-const getAllTestsInfo = (ip, tests, tmpDir) =>
-  new Promise((resolve, reject) => {
-    tmpDir =
-      tmpDir ||
-      path.dirname(tmp.dirSync({ mode: 750, prefix: 'cbiHelper_' }).name);
-    const spinners = new MultiSpinner(
-      tests.map((t, idx) => ({
-        [`spin-${idx}`]: t.testName
-      }))
-    );
-    const fetches = tests.map(t =>
-      getSingleTestInfo(ip, t, tmpDir, spinners, t.testName)
-    );
-    Promise.all(fetches)
-      .then(results => {
-        spinners.on('done', () => {
-          open(tmpDir);
-          resolve();
-        });
-      })
-      .catch(reason => {
-        console.log(reason);
-        resolve(reason);
-      });
-  });
-
-const getSingleTestInfo = (ip, t, tmpDir, spinners, spinnerID) =>
+const getSingleTestInfo = (ip, t, tmpDir) =>
   Promise.all([
-    downloadTestDir(ip, t, tmpDir),
-    ...t.screenshots.map(s => downloadScreenShots(ip, s, tmpDir))
-  ])
-    .then(success => {
-      spinners.success(spinnerID);
-      return [spinnerID, success];
-    })
-    .catch(reason => {
-      console.log(reason);
-      spinners.error(spinnerID);
-      return [spinnerID, reason];
-    });
+    getFiles(ip, t, tmpDir, true),
+    ...t.screenshots.map(s => getFiles(ip, s, tmpDir))
+  ]);
 
-const findServer = (env, tests) =>
-  getServerIps(env, 'test-runner').then(ips => pickServer(ips, tests[0].dir));
+const getAllTestsInfo = (ip, tests, tmpDir) => {
+  tmpDir =
+    tmpDir ||
+    path.dirname(tmp.dirSync({ mode: 750, prefix: 'cbiHelper_' }).name);
 
-const main = (env, tests, tmpDir) => {
-  if (tests.length === 0) return noWork();
-  return new Promise(resolve => {
-    console.log(
-      `Fetching info for ${tests.length} tests from ${env} test-runner`
-    );
-    findServer(env, tests)
-      .then(ip => getAllTestsInfo(ip, tests, tmpDir))
-      .then(() => resolve());
+  return Promise.all(
+    tests.map(t => getSingleTestInfo(ip, t, tmpDir))
+  ).then(results => {
+    open(tmpDir);
+    return results;
   });
 };
 
+const findServer = (env, tests) =>
+  getServersByRole(env, 'test-runner').then(
+    ips => (ips.length === 1 ? ips[0] : pickServer(ips, tests[0].dir))
+  );
+
+const main = (env, tests, tmpDir) =>
+  findServer(env, tests).then(ip => getAllTestsInfo(ip, tests, tmpDir));
+
 if (require.main === module) {
   const env = process.argv[2];
-  const picPath = process.argv[3];
-  main(env, [picPath]);
+  const tests = process.argv[3];
+  if (tests.length === 0) {
+    noWork();
+    process.exit(1);
+  }
+  console.log(
+    `Fetching info for ${tests.length} tests from ${env} test-runner`
+  );
+  main(env, [tests]);
 }
 
 export default main;

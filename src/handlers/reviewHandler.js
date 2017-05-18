@@ -1,15 +1,15 @@
 #! /usr/bin/env babel-node
 import inquirer from 'inquirer';
-import winSetup from '../utils/newTermWindowSetup';
+import { askWhich } from '../utils';
 import gitHelper from '../utils/git/setGitBranches';
 import gitUtils from '../utils/git/';
-import { askWhich } from '../utils';
+import winSetup from './';
 
 const setupInfo = winSetup(process.argv[2]);
 const allReviewEls = setupInfo[0];
 
 const reviewSetup = reviewEls =>
-  new Promise((resolve) => {
+  new Promise(resolve => {
     const reversions = reviewEls.map(({ repo, branch }) => {
       const rel = gitHelper(repo, branch);
       return () => {
@@ -43,17 +43,18 @@ const reviewPrompts = [
   }
 ];
 
-const chooseReviewEls = (availableReviewBranches) => {
+const chooseReviewEls = availableReviewBranches => {
   const message = 'Select branches to review';
-  const choices = availableReviewBranches.map(
-    re => ({ name: `${re.repo} ${re.branch}`, value: re })
-  );
+  const choices = availableReviewBranches.map(re => ({
+    name: `${re.repo} ${re.branch}`,
+    value: re
+  }));
   return askWhich(choices, message);
 };
 
 const handlePatch = () => {
-  chooseReviewEls(allReviewEls).then((patchBranches) => {
-    patchBranches.forEach((b) => {
+  chooseReviewEls(allReviewEls).then(patchBranches => {
+    patchBranches.forEach(b => {
       gitUtils
         .makePatch(b.repo)
         .then(() => console.log(`Patch produced for ${b.branch}`));
@@ -61,33 +62,33 @@ const handlePatch = () => {
   });
 };
 
-const keepAsking = () => new Promise((resolve) => {
-  inquirer.prompt(reviewPrompts).then((answers) => {
-    switch (answers.reviewAction) {
-      case 'patch':
-        handlePatch();
-        break;
-      case 'setupEdit':
-        gitUtils.setupForLocalEdits();
-        break;
-      case 'clearChanges':
-        allReviewEls.forEach((b) => {
-          gitUtils.getWorkingDir(b.repo);
-          gitUtils.clearLocalChanges();
-        });
-        break;
-      default:
-        break;
-    }
-    if (answers.continue) {
-      keepAsking().then(() => resolve());
-    } else {
-      resolve();
-    }
+const keepAsking = () =>
+  new Promise(resolve => {
+    inquirer.prompt(reviewPrompts).then(answers => {
+      switch (answers.reviewAction) {
+        case 'patch':
+          handlePatch();
+          break;
+        case 'setupEdit':
+          gitUtils.setupForLocalEdits();
+          break;
+        case 'clearChanges':
+          allReviewEls.forEach(b => {
+            gitUtils.getWorkingDir(b.repo);
+            gitUtils.clearLocalChanges();
+          });
+          break;
+        default:
+          break;
+      }
+      if (answers.continue) {
+        keepAsking().then(() => resolve());
+      } else {
+        resolve();
+      }
+    });
   });
-});
 
 chooseReviewEls(allReviewEls)
   .then(rEls => reviewSetup(rEls))
   .then(revert => keepAsking().then(() => revert()));
-

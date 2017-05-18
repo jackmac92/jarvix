@@ -30,33 +30,28 @@ export const moveTmpToDesktop = tmpDir => {
   shell.exec(`mv ${tmpDir} ~/Desktop`);
 };
 export const askWhich = (choices, msg) =>
-  new Promise(resolve => {
-    inquirer
-      .prompt([
-        {
-          type: 'checkbox',
-          message: msg,
-          name: 'whatever',
-          choices
-        }
-      ])
-      .then(selection => {
-        resolve(selection.whatever);
-      });
-  });
+  inquirer
+    .prompt([
+      {
+        type: 'checkbox',
+        message: msg,
+        name: 'whatever',
+        choices
+      }
+    ])
+    .then(selection => selection.whatever);
+
 export const waitForContinue = msg =>
-  new Promise(resolve => {
-    inquirer
-      .prompt([
-        {
-          type: 'confirm',
-          name: 'continue',
-          message: msg,
-          default: true
-        }
-      ])
-      .then(answer => resolve(answer.continue));
-  });
+  inquirer
+    .prompt([
+      {
+        type: 'confirm',
+        name: 'continue',
+        message: msg,
+        default: true
+      }
+    ])
+    .then(answer => answer.continue);
 
 export const finish = (msg, tmpDir) =>
   waitForContinue(msg).then(wantsCleanup => {

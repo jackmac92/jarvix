@@ -1,12 +1,10 @@
 import gitUtils from './git.js';
 import { runCmd } from './index.js';
 
-const makeRevert = (repo, origBranch) => {
-  return () => {
-    console.log(`Restoring ${repo} to branch ${origBranch}`);
-    gitUtils.getWorkingDir(repo);
-    runCmd(`git checkout ${origBranch}`);
-  };
+const makeRevert = (repo, origBranch) => () => {
+  console.log(`Restoring ${repo} to branch ${origBranch}`);
+  gitUtils.getWorkingDir(repo);
+  runCmd(`git checkout ${origBranch}`);
 };
 
 const repoSetup = (repo, branch) => {
@@ -17,15 +15,9 @@ const repoSetup = (repo, branch) => {
 };
 
 const main = (repo, branch) => {
-  const wd = gitUtils.getWorkingDir(repo);
-  gitUtils.checkRepoReady(repo);
-  const origBranch = gitUtils.currentGitBranch();
+  gitUtils.getWorkingDir(repo);
   repoSetup(repo, branch);
-  return {
-    repo: repo,
-    origBranch: origBranch
-  };
+  return { repo, origBranch };
 };
-
 
 export default main;
