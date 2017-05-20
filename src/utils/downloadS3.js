@@ -1,10 +1,11 @@
 import aws from 'aws-sdk';
+import path from 'path';
 import fs from 'fs';
 import Listr from 'listr';
 
 const s3 = new aws.S3();
 
-const downloadScreenshot = Key =>
+const downloadScreenshot = (Key, tmpDir = 0) =>
   new Promise((resolve, reject) => {
     s3.getObject(
       {
@@ -13,13 +14,13 @@ const downloadScreenshot = Key =>
       },
       (err, res) => {
         if (err) reject(err);
-        fs.writeFileSync(name, res.Body);
-        resolve(name);
+        tmpDir = tmpDir || path.join(__dirname, './');
+        const filePath = path.join(tmpDir, Key);
+        fs.writeFileSync(filePath, res.Body);
+        resolve(filePath);
       }
     );
   });
-
-const picName = 'screenshot-b03d550f-a06b-4453-ade0-cbb4f8cb234b.png';
 
 export const listrTask = {
   title: 'Download Test Screenshots',
@@ -27,7 +28,7 @@ export const listrTask = {
     new Listr(
       ctx.awsScreenshotKeys.map(k => ({
         title: `Downloading ${k}`,
-        task: ctx => downloadScreenshot(k)
+        task: () => downloadScreenshot(k)
       })),
       { concurrent: true }
     )

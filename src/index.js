@@ -1,7 +1,8 @@
 import isDocker from 'is-docker';
 import express from 'express';
-import { Server as WSS } from 'ws';
+import WebSocket, { Server as WSS } from 'ws';
 import openTerm from 'cmdToNewTab';
+import path from 'path';
 
 const echo = console.log;
 const echod = console.dir;
@@ -53,16 +54,16 @@ const config = {
 };
 
 const wss = new WSS(config);
-
 wss.on('connection', ws => {
   echo('NewConnection');
-  makeServer(makeHandler(ws)).listen(CMD_PORT);
   ws.on('message', message => {
     const msg = JSON.parse(decodeURIComponent(message));
     echod(msg);
     if (isCustomMsg(msg)) {
       const { data, action } = msg;
-      openTerm(action, data);
+      openTerm(path.join(__dirname, 'handlers'), action, data);
     }
   });
 });
+const ws = new WebSocket(`ws://${HOSTNAME}:${WS_PORT}/`);
+ws.on('open', () => makeServer(makeHandler(ws)).listen(CMD_PORT));

@@ -1,24 +1,32 @@
 #! /usr/bin/env babel-node
 import inquirer from 'inquirer';
+import Listr from 'listr';
 import { askWhich } from '../utils';
-import gitHelper from '../utils/git/setGitBranches';
-import gitUtils from '../utils/git/';
+import gitUtils from '../utils/git';
 import winSetup from './';
 
 const setupInfo = winSetup(process.argv[2]);
-const allReviewEls = setupInfo[0];
+const { args: allReviewEls } = setupInfo;
 
-const reviewSetup = reviewEls =>
+const gitHelper = (repo, branch) => {
+  gitUtils.getWorkingDir(repo);
+  gitUtils.fetchAll();
+  console.log(`Checking out branch ${branch} on ${repo}`);
+  gitUtils.checkoutBranch(branch);
+  gitUtils.pull();
+};
+
+const reviewSetup = (reviewEls = []) =>
   new Promise(resolve => {
-    const reversions = reviewEls.map(({ repo, branch }) => {
-      const rel = gitHelper(repo, branch);
+    const revertChanges = reviewEls.map(({ repo, branch }) => {
+      gitHelper(repo, branch);
       return () => {
-        gitUtils.getWorkingDir(rel.repo);
-        gitUtils.checkoutBranch(rel.origBranch);
+        gitUtils.getWorkingDir(repo);
+        gitUtils.checkoutBranch(branch);
       };
     });
     resolve(() => {
-      reversions.forEach(x => x());
+      revertChanges.forEach(x => x());
     });
   });
 
@@ -43,7 +51,7 @@ const reviewPrompts = [
   }
 ];
 
-const chooseReviewEls = availableReviewBranches => {
+const chooseReviewEls = (availableReviewBranches = []) => {
   const message = 'Select branches to review';
   const choices = availableReviewBranches.map(re => ({
     name: `${re.repo} ${re.branch}`,
@@ -52,15 +60,14 @@ const chooseReviewEls = availableReviewBranches => {
   return askWhich(choices, message);
 };
 
-const handlePatch = () => {
-  chooseReviewEls(allReviewEls).then(patchBranches => {
-    patchBranches.forEach(b => {
+const handlePatch = () =>
+  chooseReviewEls(allReviewEls).then(patchBranches =>
+    patchBranches.forEach(b =>
       gitUtils
         .makePatch(b.repo)
-        .then(() => console.log(`Patch produced for ${b.branch}`));
-    });
-  });
-};
+        .then(() => console.log(`Patch produced for ${b.branch}`))
+    )
+  );
 
 const keepAsking = () =>
   new Promise(resolve => {
@@ -81,14 +88,19 @@ const keepAsking = () =>
         default:
           break;
       }
-      if (answers.continue) {
-        keepAsking().then(() => resolve());
-      } else {
-        resolve();
-      }
+      answers.continue && keepAsking();
+      resolve();
     });
   });
 
+export const listrTask = {
+  title: 'Setting up branches',
+  task: ctx =>
+    reviewSetup(ctx.reviewEls).then(revertFunc => {
+      ctx.revert = revertFunc;
+    })
+};
+
 chooseReviewEls(allReviewEls)
-  .then(rEls => reviewSetup(rEls))
-  .then(revert => keepAsking().then(() => revert()));
+  .then(reviewEls => new Listr().add(listrTask).run({ reviewEls }))
+  .then(({ revert }) => keepAsking().then(() => revert()));

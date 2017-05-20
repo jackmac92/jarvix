@@ -2,28 +2,15 @@ import Promise from 'bluebird';
 import shell from 'shelljs';
 import path from 'path';
 import tmp from 'tmp';
-import { getServersByRole } from 'cbiServerUtils';
-import getFiles from '../getFileFromServer';
+import getFiles from './getFileFromServer';
+import findServer from './determineCorrectServer';
+
 const open = targetPath => shell.exec(`open ${targetPath}`);
-
-const serverTestCall = (ip, picPath) =>
-  new Promise((resolve, reject) => {
-    const cmd = `ssh ${ip} "test -e ${picPath}"`;
-    shell.exec(cmd, { silent: true }, code => {
-      code === 0 ? resolve(ip) : reject();
-    });
-  });
-
-const checkServer = (ip, picPath) => serverTestCall(ip, picPath).catch(x => {});
-
-const pickServer = (ips, picPath) =>
-  Promise.any(ips.map(ip => checkServer(ip, picPath)));
-
 const noWork = () => console.log('Ok');
 
 const getSingleTestInfo = (ip, t, tmpDir) =>
   Promise.all([
-    getFiles(ip, t, tmpDir, true),
+    getFiles(ip, t.dir, tmpDir, true),
     ...t.screenshots.map(s => getFiles(ip, s, tmpDir))
   ]);
 
@@ -40,13 +27,10 @@ const getAllTestsInfo = (ip, tests, tmpDir) => {
   });
 };
 
-const findServer = (env, tests) =>
-  getServersByRole(env, 'test-runner').then(
-    ips => (ips.length === 1 ? ips[0] : pickServer(ips, tests[0].dir))
-  );
-
 const main = (env, tests, tmpDir) =>
-  findServer(env, tests).then(ip => getAllTestsInfo(ip, tests, tmpDir));
+  findServer(env, 'test-runner', `test -e ${tests[0].dir}`).then(ip =>
+    getAllTestsInfo(ip, tests, tmpDir)
+  );
 
 if (require.main === module) {
   const env = process.argv[2];

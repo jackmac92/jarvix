@@ -13,4 +13,3 @@ if [[ $(docker images | grep -q jarvix-host) ]]; then
 fi
 
 run
-
