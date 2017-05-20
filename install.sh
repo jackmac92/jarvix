@@ -1,7 +1,7 @@
 #!/bin/bash -ex
 
-npm install
+yarn install
 
-chmod -R +x handlers/
+chmod -R +x src/handlers/
 
-chmod +x jarvixServer.js
+chmod +x src/index.js
