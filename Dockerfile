@@ -8,10 +8,9 @@ RUN yarn install
 
 ADD . .
 
-ENV APPPORT=7442
-
 RUN yarn global add babel-cli
 
-EXPOSE 7442
-
+ARG APPPORT=7442
+ENV APPPORT $APPPORT
+EXPOSE $APPPORT
 CMD npm start

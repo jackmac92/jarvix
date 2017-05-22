@@ -1,13 +1,10 @@
 #! /usr/bin/env babel-node
 import Listr from 'listr';
-// import infoGrabber from '../utils/testRunnerDl';
+import { downloadS3Task } from 'cbiServerUtils';
 import winSetup from './';
-import { waitForContinue, askWhich, finish } from '../utils';
-import { listrTask as downloadS3 } from '../utils/downloadS3';
+import { waitForContinue, askWhich, finish } from '../utils/index';
 
 const setupInfo = winSetup(process.argv[2]);
-// const screenshotsInfo = setupInfo[0];
-// const tmpDir = setupInfo[1];
 const { tmpDir, args: screenshotsInfo } = setupInfo;
 const { tests } = screenshotsInfo;
 
@@ -20,15 +17,9 @@ const selectTests = testList =>
     return askWhich(choices, 'Select tests');
   });
 
-// ctx.selectedTests = chosenTests;
-// ctx.awsScreenshotKeys = chosenTests.reduce(
-//   (acc, t) => [...acc, ...t.screenshots],
-//   []
-// );
-
 selectTests(tests)
   .then(selectedTests =>
-    new Listr().add(downloadS3).run({
+    new Listr().add(downloadS3Task).run({
       tmpDir,
       selectedTests,
       awsScreenshotKeys: selectedTests
@@ -40,7 +31,3 @@ selectTests(tests)
   .catch(err => {
     throw new Error(err);
   });
-
-// selectTests()
-//   .then(tests => infoGrabber(screenshotsInfo.env, tests, tmpDir))
-//   .then(() => );

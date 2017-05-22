@@ -1,9 +1,9 @@
 #! /usr/bin/env babel-node
 import inquirer from 'inquirer';
 import Listr from 'listr';
-import { askWhich } from '../utils';
+import { askWhich } from '../utils/index';
 import gitUtils from '../utils/git';
-import winSetup from './';
+import winSetup from './index';
 
 const setupInfo = winSetup(process.argv[2]);
 const { args: allReviewEls } = setupInfo;

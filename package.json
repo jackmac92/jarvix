@@ -5,6 +5,7 @@
   "main": "src/",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "docker": "docker build . -t jarvix-host && docker run jarvix-host",
     "start": "babel-node .",
     "build": "node scripts/build",
     "dev": "nodemon --exec \"nodejs-dashboard babel-node\" ./src/dev.index.js"

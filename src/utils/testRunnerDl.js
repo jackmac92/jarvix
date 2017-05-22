@@ -2,8 +2,10 @@ import Promise from 'bluebird';
 import shell from 'shelljs';
 import path from 'path';
 import tmp from 'tmp';
-import getFiles from './getFileFromServer';
-import findServer from './determineCorrectServer';
+import {
+  getFileFromServer as getFiles,
+  determineCorrectServer as findServer
+} from 'cbiServerUtils';
 
 const open = targetPath => shell.exec(`open ${targetPath}`);
 const noWork = () => console.log('Ok');
