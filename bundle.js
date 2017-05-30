@@ -1,8 +1,13 @@
-import isDocker from 'is-docker';
-import express from 'express';
-import WebSocket, { Server as WSS } from 'ws';
-import openTerm from 'cmdToNewTab';
-import path from 'path';
+'use strict';
+
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var isDocker = _interopDefault(require('is-docker'));
+var express = _interopDefault(require('express'));
+var WebSocket = require('ws');
+var WebSocket__default = _interopDefault(WebSocket);
+var openTerm = _interopDefault(require('cmdToNewTab'));
+var path = _interopDefault(require('path'));
 
 const echo = console.log;
 const echod = console.dir;
@@ -38,11 +43,12 @@ const makeServer = cmdSender => {
 
 const makeHandler = ws => (cmd, options) => {
   switch (cmd.type) {
-    case 'wildcard': {
-      const { action } = cmd;
-      ws.send({ action, opts: options });
-      break;
-    }
+    case 'wildcard':
+      {
+        const { action } = cmd;
+        ws.send({ action, opts: options });
+        break;
+      }
     default:
       throw new Error(`Unrecognized command type "${cmd.type}"`);
   }
@@ -53,7 +59,7 @@ const config = {
   host: HOSTNAME
 };
 
-const wss = new WSS(config);
+const wss = new WebSocket.Server(config);
 wss.on('connection', ws => {
   echo('NewConnection');
   ws.on('message', message => {
@@ -65,5 +71,5 @@ wss.on('connection', ws => {
     }
   });
 });
-// const ws = new WebSocket(`ws://${HOSTNAME}:${WS_PORT}/`);
-// ws.on('open', () => makeServer(makeHandler(ws)).listen(CMD_PORT));
+const ws = new WebSocket__default(`ws://${HOSTNAME}:${WS_PORT}/`);
+ws.on('open', () => makeServer(makeHandler(ws)).listen(CMD_PORT));

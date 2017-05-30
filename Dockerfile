@@ -2,15 +2,18 @@ FROM node:alpine
 
 WORKDIR /app
 
-ADD package.json .
-ADD yarn.lock .
+RUN npm set registry http://centr.jackmac.party:4873
+# RUN npm adduser --registry http://centr.jackmac.party:4873
+
+ADD package.json yarn.lock ./
 RUN yarn install
 
 ADD . .
 
-RUN yarn global add babel-cli
+RUN npm run build
 
-ARG APPPORT=7442
+ARG APPPORT
 ENV APPPORT $APPPORT
 EXPOSE $APPPORT
+
 CMD npm start

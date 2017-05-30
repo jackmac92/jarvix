@@ -10,28 +10,35 @@ const getInitials = () =>
     .map(n => n[0]);
 
 export default {
-  setUpWorkTree: (branchName, tmpDir) => {
-    runCmd(`git worktree add -b ${tmpDir} ${branchName}-${getInitials()}`);
-  },
+  setUpWorkTree: (branchName, tmpDir) =>
+    runCmd(`git worktree add -b ${tmpDir} ${branchName}-${getInitials()}`),
+
   prepareRepo(repo) {
     return this.repoHasBeenCloned(repo) || this.cloneRepo(repo);
   },
+
   clearLocalChanges: () => runCmd('git stash save --keep-index'),
+
   fetchAll: () => runCmd('git fetch --all'),
+
   repoHasBeenCloned(repo) {
     return this.listDirs(process.env.CBI_ROOT).indexOf(repo) !== -1;
   },
+
   pull: () => runCmd('git pull'),
   currentGitBranch: () =>
     runCmd('git branch | grep "* "').toString().split(/\s/)[1],
+
   checkoutBranch: (branchName, newBranch) =>
     runCmd(`git checkout ${newBranch ? '-b' : ''} ${branchName}`),
+
   getCbiRoot() {
     if (!process.env.CBI_ROOT) {
       throw new Error('Need to set CBI_ROOT environment var');
     }
     return process.env.CBI_ROOT;
   },
+
   setupForLocalEdits(tmpDir) {
     const branch = this.currentGitBranch();
     const reviewerBranch = `${branch}__${getInitials()}`;
@@ -42,19 +49,13 @@ export default {
     shell.cd(dir);
     return runCmd('ls').toString().split('\n');
   },
-  makePatch: repo =>
-    new Promise((resolve, reject) => {
-      const wd = this.getWorkingDir(repo);
-      const currentBranch = this.currentGitBranch();
-      const origBranch = currentBranch.split('__')[0];
-      const patchCmd = `git format-patch ${origBranch} --stdout > ~/Desktop/${currentBranch}.patch`;
-      const result = runCmd(patchCmd);
-      if (result.code === 0) {
-        resolve();
-      } else {
-        reject();
-      }
-    }),
+  makePatch: repo => {
+    const wd = this.getWorkingDir(repo);
+    const currentBranch = this.currentGitBranch();
+    const origBranch = currentBranch.split('__')[0];
+    const patchCmd = `git format-patch ${origBranch} --stdout > ~/Desktop/${currentBranch}.patch`;
+    return promiseExec(patchCmd);
+  },
 
   cloneRepo(repo) {
     shell.cd(this.getCbiRoot());

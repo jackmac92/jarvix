@@ -4,7 +4,7 @@ import inquirer from 'inquirer';
 function exec(cmd) {
   return shell.exec(cmd, { silent: true });
 }
-export const pinkyExec = cmd =>
+export const promiseExec = cmd =>
   new Promise((resolve, reject) => {
     const result = shell.exec(cmd, { silent: true });
     const code = result.code;
