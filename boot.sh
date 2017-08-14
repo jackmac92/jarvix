@@ -11,7 +11,7 @@ done
 devPort=${devPort:-7442}
 
 run() {
-    docker run -d \
+    docker run --rm -d \
         --name jarvix \
         -p "$devPort":"$devPort" \
         jarvix-host
